@@ -1,6 +1,4 @@
-FROM alpine:latest as base
-
-FROM scratch
+FROM alpine:latest
 
 COPY easy-strava-upload .
 

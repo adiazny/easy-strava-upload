@@ -5,27 +5,28 @@
 MAKEFILE_PATH=$(shell readlink -f "${0}")
 MAKEFILE_DIR=$(shell dirname "${MAKEFILE_PATH}")
 
-version=$(shell grep 'image: adiazny/easy-strava-upload:' deployments/kubernetes/deployment.yml | awk -F: '{print $$3}')
+#version=$(shell grep 'image: adiazny/easy-strava-upload:' deployments/kubernetes/deployment.yml | awk -F: '{print $$3}')
+version=0.1.0
 
 parentImage=alpine:latest
 
 lint:
-	golangci-lint run ./...
+	golangci-lint run ./..
 
 #test:
 #	go test -v -race -coverprofile=coverage.out ./...
 
 build:
-	CGO_ENABLED=0 go build -o build/package/easy-strava-upload cmd/easy-strava-upload/easy-strava-upload.go
+	env GOOS=linux CGO_ENABLED=0 go build -o build/package/easy-strava-upload cmd/easy-strava-upload/easy-strava-upload.go
 
 image:
 	docker pull "${parentImage}"
-	docker image build -t adiazny/easy-strava-uplaod:${version} build/package/easy-strava-upload
+	docker image build -t adiazny/easy-strava-upload:${version} build/package/easy-strava-upload
 
 push:
 	docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
-	docker push adiazny/easy-strava-uplaod:${version}
-	docker tag adiazny/easy-strava-uplaod:${version} adiazny/easy-strava-uplaod:latest
+	docker push adiazny/easy-strava-upload:${version}
+	docker tag adiazny/easy-strava-upload:${version} adiazny/easy-strava-upload:latest
 	docker logout
 
 deploy:
