@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>Welcome to Easy Strava Upload!</title>
+<link rel="stylesheet" href="styles.css">
 <style>
 html { color-sciheme: light dark; }
 body { width: 35em; margin: 0 auto;
@@ -14,17 +15,30 @@ font-family: Tahoma, Verdana, Arial, sans-serif; }
 
 <h1>Welcome to Easy Strava Upload!</h1>
 
-<form action="http://www.foo.com" method="POST">
+<form action="http://www.foo.com/activities" method="POST">
   <div>
-    <label for="say">What greeting do you want to say?</label>
-    <input name="say" id="say" value="Hi">
+    <label for="title">Activity Title:</label>
+    <input name="title" id="title" value="Morning Activity">
   </div>
   <div>
-    <label for="to">Who do you want to say it to?</label>
-    <input name="to" id="to" value="Mom">
+    <label for="type">Sport:</label>
+    <input name="type" id="type" value="Crossfit">
   </div>
   <div>
-    <button>Send my greetings</button>
+    <label for="datetime">Date and Time:</label>
+    <input type="datetime-local" name="datetime" id="datetime" />
+  </div>
+  <div>
+    <label for="duration-select">Duration:</label>
+    <select name="duration" id="duration-select">
+      <option value=""> --Please choose an option--</option>
+      <option value="1800">30min</option>
+      <option value="2700">45min</option>
+      <option value="3600">60min</option>
+    </select>
+  </div>
+  <div>
+    <button>Submit Activity</button>
   </div>
 </form>
 
