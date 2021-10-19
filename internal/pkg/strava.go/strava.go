@@ -66,6 +66,7 @@ func PostActivity(uiRequest *http.Request, c *Config) error {
 	defer resp.Body.Close()
 
 	log.Printf("Strava POST Response Status: %v", resp.Status)
+	log.Printf("Strava Response: %v", resp)
 	if resp.StatusCode != 201 {
 		return fmt.Errorf("Strava Error: %v", resp.Status)
 	}

@@ -1,47 +1,66 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Welcome to Easy Strava Upload!</title>
-<link rel="stylesheet" href="styles.css">
-<style>
-html { color-sciheme: light dark; }
-body { width: 35em; margin: 0 auto;
-font-family: Tahoma, Verdana, Arial, sans-serif; }
-</style>
-
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Strava Upload</title>
+    <script src="form.js"></script>
+    <link
+      rel="stylesheet"
+      href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css"
+    />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 </head>
+  <body>
+    <div class="col-sm-6 col-sm-offset-3">
+      <h1>Easy Strava Upload</h1>
 
-<body>
+      <form action="http://03d16d1a531c.mylabserver.com:30081" method="POST">
+        <div id="name-group" class="form-group">
+          <label for="name">Title</label>
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            name="name"
+            value="Morning CrossFit"
+          />
+        </div>
 
-<h1>Welcome to Easy Strava Upload!</h1>
+        <div id="type-group" class="form-group">
+          <label for="type">Sport</label>
+          <input
+            type="text"
+            class="form-control"
+            id="type"
+            name="type"
+            value="Crossfit"
+          />
+        </div>
 
-<form action="http://strava-svc:8090/activities" method="POST">
-  <div>
-    <label for="title">Activity Title:</label>
-    <input name="name" id="title" value="Morning Activity">
-  </div>
-  <div>
-    <label for="type">Sport:</label>
-    <input name="type" id="type" value="Crossfit">
-  </div>
-  <div>
-    <label for="datetime">Date and Time:</label>
-    <input type="datetime-local" name="start_date_local" id="datetime" />
-  </div>
-  <div>
-    <label for="duration-select">Duration:</label>
-    <select name="elapsed_time" id="duration-select">
-      <option value=""> --Please choose an option--</option>
-      <option value="1800">30min</option>
-      <option value="2700">45min</option>
-      <option value="3600">60min</option>
-    </select>
-  </div>
-  <div>
-    <button>Submit Activity</button>
-  </div>
-</form>
+        <div id="datetime-group" class="form-group">
+          <label for="start_date_local">Date and Time</label>
+          <input
+            type="datetime-local"
+            class="form-control"
+            id="start_date_local"
+            name="start_date_local"
+          />
+        </div>
 
-</body>
-
+        <div id="elapsed_time" class="form-group">
+          <label for="elapsed_time">Duration</label>
+          <select name="elapsed_time">
+            <option value=""> --Please choose an option--</option>
+            <option value="1800">30min</option>
+            <option value="2700">45min</option>
+            <option value="3600">60min</option>
+          </select>
+        </div>
+       
+        <button type="submit" class="btn btn-success">
+          Submit
+        </button>
+      </form>
+    </div>
+  </body>
 </html>

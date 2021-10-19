@@ -6,7 +6,7 @@ MAKEFILE_PATH=$(shell readlink -f "${0}")
 MAKEFILE_DIR=$(shell dirname "${MAKEFILE_PATH}")
 
 #version=$(shell grep 'image: adiazny/easy-strava-upload:' deployments/kubernetes/deployment.yml | awk -F: '{print $$3}')
-version=0.1.0
+version=0.3.0
 
 parentImage=alpine:latest
 
