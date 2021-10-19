@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/adiazny/easy-strava-upload/internal/pkg/strava.go"
+	"github.com/adiazny/easy-strava-upload/internal/pkg/strava"
 )
 
 type Server struct {
