@@ -6,7 +6,7 @@ MAKEFILE_PATH=$(shell readlink -f "${0}")
 MAKEFILE_DIR=$(shell dirname "${MAKEFILE_PATH}")
 
 #version=$(shell grep 'image: adiazny/easy-strava-upload:' deployments/kubernetes/deployment.yml | awk -F: '{print $$3}')
-version=0.3.0
+version=0.4.0
 
 parentImage=alpine:latest
 
@@ -17,7 +17,7 @@ lint:
 #	go test -v -race -coverprofile=coverage.out ./...
 
 build:
-	env GOOS=linux CGO_ENABLED=0 go build -o build/package/easy-strava-upload cmd/easy-strava-upload/easy-strava-upload.go
+	GOOS=linux CGO_ENABLED=0 go build -o build/package/easy-strava-upload cmd/easy-strava-upload/easy-strava-upload.go
 
 image:
 	docker pull "${parentImage}"

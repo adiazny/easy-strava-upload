@@ -15,9 +15,16 @@ spec:
     spec:
       containers:
       - name: strava-upload
-        image: adiazny/easy-strava-upload:0.1.0
+        image: adiazny/easy-strava-upload:0.4.0
         ports:
-        - containerPort: 8080
+        - containerPort: 8090
+        env:
+        - name: STRAVA_CLIENT_ID
+          value: [value]
+        - name: STRAVA_CLIENT_SECRET
+          value: [value]
+        - name: STRAVA_REFRESH_TOKEN
+          value: [value]
 ---
 apiVersion: v1
 kind: Service
@@ -27,6 +34,7 @@ metadata:
 spec:
   selector:
     app: strava-upload
+  type: LoadBalancer
   ports:
   - port: 8090
     protocol: TCP
@@ -49,7 +57,7 @@ spec:
     spec:
       containers:
       - name: strava-ui
-        image: adiazny/easy-strava-ui:0.2.0
+        image: adiazny/easy-strava-ui:0.12.0
         ports:
         - containerPort: 80
 ---
