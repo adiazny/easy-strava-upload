@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	stravaTokenURL = "https://www.strava.com/oauth/token"
+	stravaTokenURL     = "https://www.strava.com/oauth/token"
+	activitiesEndpoint = "https://www.strava.com/api/v3/activities"
 )
 
 // Config Struct
@@ -39,8 +40,6 @@ type stravaRefreshResponse struct {
 func PostActivity(uiRequest *http.Request, c *Config) error {
 	sp := newProvider("strava", c)
 
-	activitiesEndpoint := "https://www.strava.com/api/v3/activities"
-
 	client := &http.Client{}
 
 	//Parse Form params coming in from UI
@@ -49,8 +48,8 @@ func PostActivity(uiRequest *http.Request, c *Config) error {
 
 	req, err := http.NewRequest("POST", activitiesEndpoint, strings.NewReader(urlValues.Encode()))
 	if err != nil {
-		log.Printf("NewRequest Log Err: %v\n", err)
-		return fmt.Errorf("Error: %v", err)
+		log.Printf("Error creating HTTP request %s: %v\n", activitiesEndpoint, err)
+		return err
 	}
 
 	access, _, _ := sp.RefreshToken(c.StravaRefreshToken)
@@ -59,19 +58,19 @@ func PostActivity(uiRequest *http.Request, c *Config) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("client.Do Log Err: %v\n", err)
-		return fmt.Errorf("Error: %v", err)
+		log.Printf("Error making HTTP POST request to Strava /activities: %v\n", err)
+		return err
 
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Strava POST Response Status: %v", resp.Status)
-	log.Printf("Strava Response: %v", resp)
 	if resp.StatusCode != 201 {
-		return fmt.Errorf("Strava Error: %v", resp.Status)
+		log.Printf("HTTP /activites reponse code: %v\n", resp.StatusCode)
+		log.Printf("Strava /activities response: %v\n", resp)
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func newProvider(name string, c *Config) *provider {
@@ -84,34 +83,29 @@ func newProvider(name string, c *Config) *provider {
 
 // RefreshToken refreshes access token
 func (p *provider) RefreshToken(rt string) (access, refresh string, err error) {
-	log.Printf("Provider: %s Inside RefreshToken()", p.providerName)
-
 	var tokenURL string
 	var formData url.Values
 
-	switch p.providerName {
-	case "strava":
-		tokenURL = stravaTokenURL
-		formData = url.Values{
-			"grant_type":    {"refresh_token"},
-			"client_id":     {p.config.StravaClientID},
-			"client_secret": {p.config.StravaClientSecret},
-			"refresh_token": {rt},
-		}
+	tokenURL = stravaTokenURL
+	formData = url.Values{
+		"grant_type":    {"refresh_token"},
+		"client_id":     {p.config.StravaClientID},
+		"client_secret": {p.config.StravaClientSecret},
+		"refresh_token": {rt},
 	}
 
 	encodedFormData := formData.Encode()
 
 	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(encodedFormData))
 	if err != nil {
-		log.Printf("NewRequest Log Err: %v\n", err)
-		return access, refresh, fmt.Errorf("Error: %v", err)
+		log.Printf("Error creating HTTP Request %s: %v\n", tokenURL, err)
+		return access, refresh, err
 	}
 
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
-		log.Printf("client.Do Log Err: %v\n", err)
-		return access, refresh, fmt.Errorf("Error: %v", err)
+		log.Printf("Error making HTTP POST to Strava OAuth /token: %v\n", err)
+		return access, refresh, err
 	}
 	defer resp.Body.Close()
 
@@ -120,15 +114,11 @@ func (p *provider) RefreshToken(rt string) (access, refresh string, err error) {
 		log.Fatal(err)
 	}
 
-	switch p.providerName {
-	case "strava":
-		var stravaRefreshResp stravaRefreshResponse
-		json.Unmarshal(b, &stravaRefreshResp)
-		log.Printf("RefreshResponse: %+v\n", stravaRefreshResp)
-		access = stravaRefreshResp.AccesToken
-		refresh = stravaRefreshResp.RefreshToken
-		return
-	}
+	var stravaRefreshResp stravaRefreshResponse
+	json.Unmarshal(b, &stravaRefreshResp)
+	access = stravaRefreshResp.AccesToken
+	refresh = stravaRefreshResp.RefreshToken
+
 	return
 
 }
