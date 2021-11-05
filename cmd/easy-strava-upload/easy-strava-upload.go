@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/adiazny/easy-strava-upload/internal/pkg/api"
+	"github.com/adiazny/easy-strava-upload/internal/pkg/strava"
 	"github.com/caarlos0/env"
 	"github.com/rs/cors"
 
@@ -14,9 +15,9 @@ import (
 )
 
 type environmentVariables struct {
-	StravaClientID     string `env: "STRAVA_CLIENT_ID, required"`
-	StravaClientSecret string `env: "STRAVA_CLIENT_SECRET, required"`
-	StravaRefreshToken string `env: "STRAVA_REFRESH_TOKEN, required"`
+	StravaClientID     string `env:"STRAVA_CLIENT_ID,required"`
+	StravaClientSecret string `env:"STRAVA_CLIENT_SECRET,required"`
+	StravaRefreshToken string `env:"STRAVA_REFRESH_TOKEN,required"`
 }
 
 func setup() (envVars *environmentVariables, err error) {
@@ -36,6 +37,31 @@ func setup() (envVars *environmentVariables, err error) {
 
 }
 
+func makeStravaProvider(log *logrus.Entry, envVars *environmentVariables) *strava.Provider {
+	log.Infof("EnvVars: %s", envVars.StravaClientID)
+
+	config := &strava.Config{
+		StravaClientID:     envVars.StravaClientID,
+		StravaClientSecret: envVars.StravaClientSecret,
+		StravaRefreshToken: envVars.StravaRefreshToken,
+	}
+	log.Infof("Config: %s", config.StravaClientID)
+	return strava.NewProvider(log, "strava", config)
+}
+
+func newServer(log *logrus.Entry, provider strava.Provider) *api.Server {
+	s := &api.Server{
+		Log:            log,
+		Router:         http.NewServeMux(),
+		StravaProvider: &provider,
+	}
+
+	s.Routes()
+
+	log.Info("Easy-Strava-Upload Application Started")
+	return s
+}
+
 func main() {
 
 	logger := logrus.New()
@@ -43,10 +69,16 @@ func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 
 	log := logrus.NewEntry(logger)
-	log.WithField("component", "easy-strava-upload")
+	log.WithField("component", "easy-strava-upload").Info("starting up")
+	defer log.Info("Shutting down")
 
-	log.Info("Starting Easy-Strava-Upload Application")
+	envVars, err := setup()
+	if err != nil {
+		log.WithError(err).Error()
+	}
 
-	log.Fatal(http.ListenAndServe(":8090", cors.Default().Handler(api.NewServer())))
+	stravaProvider := makeStravaProvider(log, envVars)
+
+	log.Fatal(http.ListenAndServe(":8090", cors.Default().Handler(newServer(log, *stravaProvider))))
 
 }

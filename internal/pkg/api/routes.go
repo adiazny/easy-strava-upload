@@ -1,6 +1,6 @@
 package api
 
-func (s *Server) routes() {
-	s.router.HandleFunc("/about", s.handleAboutEndpoint())
-	s.router.HandleFunc("/activities", s.handleActivities())
+func (s *Server) Routes() {
+	s.Router.HandleFunc("/about", s.handleAboutEndpoint())
+	s.Router.HandleFunc("/activities", s.handleActivities())
 }

@@ -4,16 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	stravaTokenURL     = "https://www.strava.com/oauth/token"
 	activitiesEndpoint = "https://www.strava.com/api/v3/activities"
 )
+
+type Provider struct {
+	Log          *logrus.Entry
+	ProviderName string
+	Config       *Config
+	HTTPClient   *http.Client
+}
 
 // Config Struct
 type Config struct {
@@ -22,13 +30,6 @@ type Config struct {
 	StravaRefreshToken string
 	Scopes             []string
 }
-
-type provider struct {
-	providerName string
-	config       *Config
-	httpClient   *http.Client
-}
-
 type stravaRefreshResponse struct {
 	TokenType    string `json:"token_type"`
 	AccesToken   string `json:"access_token"`
@@ -37,8 +38,7 @@ type stravaRefreshResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func PostActivity(uiRequest *http.Request, c *Config) error {
-	sp := newProvider("strava", c)
+func (provider *Provider) PostActivity(uiRequest *http.Request) error {
 
 	client := &http.Client{}
 
@@ -48,49 +48,41 @@ func PostActivity(uiRequest *http.Request, c *Config) error {
 
 	req, err := http.NewRequest("POST", activitiesEndpoint, strings.NewReader(urlValues.Encode()))
 	if err != nil {
-		log.Printf("Error creating HTTP request %s: %v\n", activitiesEndpoint, err)
+		provider.Log.Infof("Error creating HTTP request %s: %v\n", activitiesEndpoint, err)
 		return err
 	}
 
-	access, _, _ := sp.RefreshToken(c.StravaRefreshToken)
+	access, _, _ := provider.RefreshToken(provider.Config.StravaRefreshToken)
 	bearer := fmt.Sprintf("Bearer %s", access)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Error making HTTP POST request to Strava /activities: %v\n", err)
+		provider.Log.Infof("Error making HTTP POST request to Strava /activities: %v\n", err)
 		return err
 
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		log.Printf("HTTP /activites reponse code: %v\n", resp.StatusCode)
-		log.Printf("Strava /activities response: %v\n", resp)
+		provider.Log.Infof("HTTP /activites reponse code: %v\n", resp.StatusCode)
+		provider.Log.Infof("Strava /activities response: %v\n", resp)
 		return err
 	}
 
 	return nil
 }
 
-func newProvider(name string, c *Config) *provider {
-	p := new(provider)
-	p.providerName = name
-	p.config = c
-	p.httpClient = http.DefaultClient
-	return p
-}
-
-// RefreshToken refreshes access token
-func (p *provider) RefreshToken(rt string) (access, refresh string, err error) {
+// RefreshToken refreshes the OAUTH access token
+func (provider *Provider) RefreshToken(rt string) (access, refresh string, err error) {
 	var tokenURL string
 	var formData url.Values
 
 	tokenURL = stravaTokenURL
 	formData = url.Values{
 		"grant_type":    {"refresh_token"},
-		"client_id":     {p.config.StravaClientID},
-		"client_secret": {p.config.StravaClientSecret},
+		"client_id":     {provider.Config.StravaClientID},
+		"client_secret": {provider.Config.StravaClientSecret},
 		"refresh_token": {rt},
 	}
 
@@ -98,20 +90,20 @@ func (p *provider) RefreshToken(rt string) (access, refresh string, err error) {
 
 	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(encodedFormData))
 	if err != nil {
-		log.Printf("Error creating HTTP Request %s: %v\n", tokenURL, err)
+		provider.Log.Infof("Error creating HTTP Request %s: %v\n", tokenURL, err)
 		return access, refresh, err
 	}
 
-	resp, err := p.httpClient.Do(req)
+	resp, err := provider.HTTPClient.Do(req)
 	if err != nil {
-		log.Printf("Error making HTTP POST to Strava OAuth /token: %v\n", err)
+		provider.Log.Infof("Error making HTTP POST to Strava OAuth /token: %v\n", err)
 		return access, refresh, err
 	}
 	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		provider.Log.Fatal(err)
 	}
 
 	var stravaRefreshResp stravaRefreshResponse
@@ -120,5 +112,13 @@ func (p *provider) RefreshToken(rt string) (access, refresh string, err error) {
 	refresh = stravaRefreshResp.RefreshToken
 
 	return
+}
 
+func NewProvider(log *logrus.Entry, name string, c *Config) *Provider {
+	p := new(Provider)
+	p.Log = log
+	p.ProviderName = name
+	p.Config = c
+	p.HTTPClient = http.DefaultClient
+	return p
 }
