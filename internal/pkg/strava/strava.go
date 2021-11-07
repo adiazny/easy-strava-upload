@@ -1,18 +1,15 @@
 package strava
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 
+	"github.com/adiazny/easy-strava-upload/internal/pkg/store"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	stravaTokenURL     = "https://www.strava.com/oauth/token"
 	activitiesEndpoint = "https://www.strava.com/api/v3/activities"
 )
 
@@ -21,6 +18,7 @@ type Provider struct {
 	ProviderName string
 	Config       *Config
 	HTTPClient   *http.Client
+	Redis        *store.Redis
 }
 
 // Config Struct
@@ -30,95 +28,74 @@ type Config struct {
 	StravaRefreshToken string
 	Scopes             []string
 }
-type stravaRefreshResponse struct {
-	TokenType    string `json:"token_type"`
-	AccesToken   string `json:"access_token"`
-	ExpiresAt    int    `json:"expires_at"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-}
 
-func (provider *Provider) PostActivity(uiRequest *http.Request) error {
+func (provider *Provider) PostActivity(uiReq *http.Request) error {
 
 	client := &http.Client{}
 
 	//Parse Form params coming in from UI
-	uiRequest.ParseForm()
-	urlValues := uiRequest.Form
+	uiReq.ParseForm()
+	urlValues := uiReq.Form
 
-	req, err := http.NewRequest("POST", activitiesEndpoint, strings.NewReader(urlValues.Encode()))
+	req, err := http.NewRequest(http.MethodPost, activitiesEndpoint, strings.NewReader(urlValues.Encode()))
 	if err != nil {
-		provider.Log.Infof("Error creating HTTP request %s: %v\n", activitiesEndpoint, err)
+		provider.Log.Infof("Error creating HTTP request %s: %v", activitiesEndpoint, err)
 		return err
 	}
 
-	access, _, _ := provider.RefreshToken(provider.Config.StravaRefreshToken)
-	bearer := fmt.Sprintf("Bearer %s", access)
+	accessToken, refreshToken, err := provider.GetTokens()
+	if err != nil {
+		provider.Log.Infof("Error retrieving refresh token: %v", err)
+		return err
+	}
+
+	if accessToken == "" {
+		accessToken, err = provider.RefreshToken(refreshToken)
+		if err != nil {
+			return err
+		}
+	}
+
+	// check access token expiration
+	isTokenExpired, err := provider.checkAccessTokenExpired()
+	if err != nil {
+		provider.Log.Infof("Error checking access token: %v", err)
+		return err
+	}
+
+	if isTokenExpired {
+		// if expired, refresh token
+		accessToken, err = provider.RefreshToken(refreshToken)
+		if err != nil {
+			return err
+		}
+	}
+
+	bearer := fmt.Sprintf("Bearer %s", accessToken)
 	req.Header.Add("Authorization", bearer)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		provider.Log.Infof("Error making HTTP POST request to Strava /activities: %v\n", err)
+		provider.Log.Infof("Error making HTTP POST request to Strava /activities: %v", err)
 		return err
 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 201 {
-		provider.Log.Infof("HTTP /activites reponse code: %v\n", resp.StatusCode)
-		provider.Log.Infof("Strava /activities response: %v\n", resp)
+	if resp.StatusCode != http.StatusCreated {
+		provider.Log.Infof("HTTP POST to /activites returned reponse code and status: %d %s: ", resp.StatusCode, resp.Status)
 		return err
 	}
 
 	return nil
 }
 
-// RefreshToken refreshes the OAUTH access token
-func (provider *Provider) RefreshToken(rt string) (access, refresh string, err error) {
-	var tokenURL string
-	var formData url.Values
-
-	tokenURL = stravaTokenURL
-	formData = url.Values{
-		"grant_type":    {"refresh_token"},
-		"client_id":     {provider.Config.StravaClientID},
-		"client_secret": {provider.Config.StravaClientSecret},
-		"refresh_token": {rt},
-	}
-
-	encodedFormData := formData.Encode()
-
-	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(encodedFormData))
-	if err != nil {
-		provider.Log.Infof("Error creating HTTP Request %s: %v\n", tokenURL, err)
-		return access, refresh, err
-	}
-
-	resp, err := provider.HTTPClient.Do(req)
-	if err != nil {
-		provider.Log.Infof("Error making HTTP POST to Strava OAuth /token: %v\n", err)
-		return access, refresh, err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		provider.Log.Fatal(err)
-	}
-
-	var stravaRefreshResp stravaRefreshResponse
-	json.Unmarshal(b, &stravaRefreshResp)
-	access = stravaRefreshResp.AccesToken
-	refresh = stravaRefreshResp.RefreshToken
-
-	return
-}
-
-func NewProvider(log *logrus.Entry, name string, c *Config) *Provider {
+func NewProvider(log *logrus.Entry, name string, c *Config, rdb *store.Redis) *Provider {
 	p := new(Provider)
 	p.Log = log
 	p.ProviderName = name
 	p.Config = c
 	p.HTTPClient = http.DefaultClient
+	p.Redis = rdb
 	return p
 }

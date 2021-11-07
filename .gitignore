@@ -17,9 +17,12 @@
 # VS Code
 .vscode/
 
-#MAC
+# MAC
 .DS_Store
 
 # Binary
 build/package/easy-strava-upload/easy-strava-upload
 build/package/easy-strava-ui/easy-strava-ui
+
+# Excalidraw
+*.excalidraw

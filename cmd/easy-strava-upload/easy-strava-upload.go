@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/adiazny/easy-strava-upload/internal/pkg/api"
+	"github.com/adiazny/easy-strava-upload/internal/pkg/store"
 	"github.com/adiazny/easy-strava-upload/internal/pkg/strava"
 	"github.com/caarlos0/env"
 	"github.com/rs/cors"
@@ -18,6 +19,9 @@ type environmentVariables struct {
 	StravaClientID     string `env:"STRAVA_CLIENT_ID,required"`
 	StravaClientSecret string `env:"STRAVA_CLIENT_SECRET,required"`
 	StravaRefreshToken string `env:"STRAVA_REFRESH_TOKEN,required"`
+	RedisAddress       string `env:"REDIS_ADDRESS,required"`
+	RedisPassword      string `env:"REDIS_PASSWORD,required"`
+	RedisDB            int    `env:"REDIS_DB,required"`
 }
 
 func setup() (envVars *environmentVariables, err error) {
@@ -38,15 +42,21 @@ func setup() (envVars *environmentVariables, err error) {
 }
 
 func makeStravaProvider(log *logrus.Entry, envVars *environmentVariables) *strava.Provider {
-	log.Infof("EnvVars: %s", envVars.StravaClientID)
-
-	config := &strava.Config{
+	stravaConfig := &strava.Config{
 		StravaClientID:     envVars.StravaClientID,
 		StravaClientSecret: envVars.StravaClientSecret,
 		StravaRefreshToken: envVars.StravaRefreshToken,
 	}
-	log.Infof("Config: %s", config.StravaClientID)
-	return strava.NewProvider(log, "strava", config)
+
+	redisConfig := &store.Config{
+		Addr:     envVars.RedisAddress,
+		Password: envVars.RedisPassword,
+		DB:       envVars.RedisDB,
+	}
+
+	redisClient := store.NewClient(log, redisConfig)
+
+	return strava.NewProvider(log, "strava", stravaConfig, redisClient)
 }
 
 func newServer(log *logrus.Entry, provider strava.Provider) *api.Server {

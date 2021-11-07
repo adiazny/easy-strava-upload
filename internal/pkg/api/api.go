@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/adiazny/easy-strava-upload/internal/pkg/strava"
@@ -33,7 +32,7 @@ func (server *Server) handleActivities() http.HandlerFunc {
 		case "POST":
 			err := server.StravaProvider.PostActivity(req)
 			if err != nil {
-				log.Printf("Error Posting to Strava API: %v", err)
+				server.Log.Infof("Error Posting to Strava API: %v", err)
 			}
 
 		default:
