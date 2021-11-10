@@ -32,7 +32,7 @@ func (server *Server) handleActivities() http.HandlerFunc {
 		case "POST":
 			err := server.StravaProvider.PostActivity(req)
 			if err != nil {
-				server.Log.Infof("Error Posting to Strava API: %v", err)
+				server.Log.Infof("Error Posting to Strava API: %w", err)
 			}
 
 		default:

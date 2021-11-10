@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,6 +14,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.uber.org/automaxprocs/maxprocs"
+)
+
+const (
+	appName = "easy-strava-upload"
 )
 
 type environmentVariables struct {
@@ -54,9 +59,9 @@ func makeStravaProvider(log *logrus.Entry, envVars *environmentVariables) *strav
 		DB:       envVars.RedisDB,
 	}
 
-	redisClient := store.NewClient(log, redisConfig)
+	redisDB := store.NewClient(log, redisConfig)
 
-	return strava.NewProvider(log, "strava", stravaConfig, redisClient)
+	return strava.NewProvider(log, "strava", stravaConfig, redisDB)
 }
 
 func newServer(log *logrus.Entry, provider strava.Provider) *api.Server {
@@ -79,7 +84,7 @@ func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 
 	log := logrus.NewEntry(logger)
-	log.WithField("component", "easy-strava-upload").Info("starting up")
+	log.WithField("component", appName).Info("starting up")
 	defer log.Info("Shutting down")
 
 	envVars, err := setup()
@@ -88,6 +93,24 @@ func main() {
 	}
 
 	stravaProvider := makeStravaProvider(log, envVars)
+
+	athleteAccess := &strava.AthleteAccessInfo{
+		ID:           strava.AthleteID,
+		Username:     strava.AthleteUsername,
+		RefreshToken: envVars.StravaRefreshToken,
+		AccessToken:  "",
+		ExpiresAt:    0,
+		ExpiresIn:    0,
+	}
+	log.Infof("AthleteAccessInfo ", athleteAccess)
+
+	athleteAccessInfoJSON, err := json.Marshal(athleteAccess)
+	if err != nil {
+		log.Infof("Failed to load data into redis: %w")
+		return
+	}
+
+	stravaProvider.Redis.Store(strava.AthleteID, athleteAccessInfoJSON)
 
 	log.Fatal(http.ListenAndServe(":8090", cors.Default().Handler(newServer(log, *stravaProvider))))
 

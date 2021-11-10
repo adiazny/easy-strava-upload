@@ -9,7 +9,7 @@ $(document).ready(function () {
   
       $.ajax({
         type: "POST",
-        url: "http://localhost:8090/activities",
+        url: "http://03d16d1a531c.mylabserver.com:30080/activities",
         data: formData,
         dataType: "json",
         encode: true,

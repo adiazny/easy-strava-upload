@@ -39,13 +39,13 @@ func (provider *Provider) PostActivity(uiReq *http.Request) error {
 
 	req, err := http.NewRequest(http.MethodPost, activitiesEndpoint, strings.NewReader(urlValues.Encode()))
 	if err != nil {
-		provider.Log.Infof("Error creating HTTP request %s: %v", activitiesEndpoint, err)
+		provider.Log.Infof("Error creating HTTP request %s: %w", activitiesEndpoint, err)
 		return err
 	}
 
 	accessToken, refreshToken, err := provider.GetTokens()
 	if err != nil {
-		provider.Log.Infof("Error retrieving refresh token: %v", err)
+		provider.Log.Infof("Error retrieving refresh and access token: %v", err)
 		return err
 	}
 
@@ -56,7 +56,6 @@ func (provider *Provider) PostActivity(uiReq *http.Request) error {
 		}
 	}
 
-	// check access token expiration
 	isTokenExpired, err := provider.checkAccessTokenExpired()
 	if err != nil {
 		provider.Log.Infof("Error checking access token: %v", err)
@@ -64,7 +63,6 @@ func (provider *Provider) PostActivity(uiReq *http.Request) error {
 	}
 
 	if isTokenExpired {
-		// if expired, refresh token
 		accessToken, err = provider.RefreshToken(refreshToken)
 		if err != nil {
 			return err
