@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: strava-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strava-pod # Base POD name
+  namespace: strava-system
+spec:
+  selector:
+    matchLabels:
+      app: strava # Selector for POD name search.
+  template:
+    metadata:
+      labels:
+        app: strava
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: strava-api
+        image: strava-api-image
+        env:
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_PODNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KUBERNETES_NAMESPACE_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KUBERNETES_NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        ports:
+        - name: strava-api
+          containerPort: 3000
+        - name: debug-api
+          containerPort: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: strava-service
+  namespace: strava-system
+spec:
+  type: ClusterIP
+  selector:
+    app: strava
+  ports:
+  - name: strava-api
+    port: 3000
+    targetPort: strava-api
+  - name: debig-api
+    port: 4000
+    targetPort: debug-api

@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../base/strava-pod/
+patchesStrategicMerge:
+- ./kind-strava-patch.yaml
+images:
+- name: strava-api-image
+  newName: strava-api-amd64
+  newTag: "1.0"
