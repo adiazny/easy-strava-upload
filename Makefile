@@ -9,7 +9,7 @@ SHELL := /bin/bash
 # ==============================================================================
 
 run:
-	go run app/services/strava-api/main.go
+	go run app/services/strava-api/main.go | go run app/tooling/logfmt/main.go
 
 # ==============================================================================
 # Building containers
@@ -53,13 +53,26 @@ kind-load:
 kind-apply:
 	kustomize build zarf/k8s/kind/strava-pod | kubectl apply -f -
 
+kind-restart:
+	kubectl rollout restart deployments strava-pod
+
 kind-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
 
 kind-status-strava:
-	kubectl get pods -o wide --watch --namespace=stava-system
+	kubectl get pods -o wide --watch
 
 kind-logs:
-	kubectl logs -l app=strava --all-containers=true -f --tail=100
+	kubectl logs -l app=strava --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
+
+kind-update: all kind-load kind-restart
+
+kind-update-apply: all kind-load kind-apply
+
+# ==============================================================================
+# Modules support
+
+tidy:
+	go mod tidy
