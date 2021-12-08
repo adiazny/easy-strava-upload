@@ -1,9 +1,15 @@
+# Binaries
+app/services/sales-api/strava-api
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Backup files
+*~*
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,9 +26,31 @@
 # MAC
 .DS_Store
 
-# Binary
-build/package/easy-strava-upload/easy-strava-upload
-build/package/easy-strava-ui/easy-strava-ui
-
 # Excalidraw
 *.excalidraw
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+# Editor files
+.idea/
+*.iml
+*.swp
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go

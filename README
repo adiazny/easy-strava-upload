@@ -1,1 +1,27 @@
 A simple app to easily and quikly upload a manual Strava activity to a Strava Profile.
+
+# Project Layers - the structure of this Project
+
+
+
+## App layer
+* Holds the startup and shutdown logic and handles accepting external input and delivering output
+* Holds the diff apps we're building, for example:
+    * services: apps you're building i.e. api or cli. 
+    * tooling: apps to support your development or the serviec you are building
+
+## Business layer
+* Logic to solve the business problem 
+    * core layer: core biz packages, api into the biz layer
+    * data layer: raw api to access database and schemas, i.e. CRUD
+    * sys layer: biz sys specifc api's
+    * web layer: spefic to the web apps we build
+
+## Foundation Layer
+* Pkgs not tied to biz but common to many upper layers. Can be considered as the "standard library" of this project
+
+## Vendor layer
+* Full copies of external 3rd party libraries
+
+## Zarf layer
+* Everything related to configuration
