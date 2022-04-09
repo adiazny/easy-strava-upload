@@ -1,0 +1,83 @@
+{
+  "type": "excalidrawlib",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "libraryItems": [
+    {
+      "status": "unpublished",
+      "elements": [
+        {
+          "type": "rectangle",
+          "version": 485,
+          "versionNonce": 1343755999,
+          "isDeleted": false,
+          "id": "iAOgRBPcmGaP4Fg5Xgspo",
+          "fillStyle": "hachure",
+          "strokeWidth": 1,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "angle": 0,
+          "x": 650.5068735566533,
+          "y": 2556.05862839417,
+          "strokeColor": "#364fc7",
+          "backgroundColor": "transparent",
+          "width": 189.07674153645837,
+          "height": 124.40948486328125,
+          "seed": 1022423103,
+          "groupIds": [],
+          "strokeSharpness": "sharp",
+          "boundElements": [
+            {
+              "id": "kO6mSkqd7kDM32SjCrDFY",
+              "type": "text"
+            },
+            {
+              "id": "kO6mSkqd7kDM32SjCrDFY",
+              "type": "text"
+            },
+            {
+              "type": "text",
+              "id": "kO6mSkqd7kDM32SjCrDFY"
+            }
+          ],
+          "updated": 1640626967447
+        },
+        {
+          "type": "text",
+          "version": 555,
+          "versionNonce": 1849723537,
+          "isDeleted": false,
+          "id": "kO6mSkqd7kDM32SjCrDFY",
+          "fillStyle": "hachure",
+          "strokeWidth": 1,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "angle": 0,
+          "x": 680.5453735566533,
+          "y": 2608.2633708258104,
+          "strokeColor": "#364fc7",
+          "backgroundColor": "transparent",
+          "width": 129,
+          "height": 20,
+          "seed": 2063890225,
+          "groupIds": [],
+          "strokeSharpness": "sharp",
+          "boundElements": [],
+          "updated": 1640626967447,
+          "fontSize": 16,
+          "fontFamily": 1,
+          "text": "HTTP Handler",
+          "baseline": 14,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": "iAOgRBPcmGaP4Fg5Xgspo",
+          "originalText": "HTTP Handler"
+        }
+      ],
+      "id": "zJMJFJUrxE3AgXl_GURBV",
+      "created": 1644180000497
+    }
+  ]
+}
